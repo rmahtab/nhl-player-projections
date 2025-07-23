@@ -37,6 +37,43 @@ TEAM_NAMES = [
     "san-jose-sharks", "seattle-kraken", "vancouver-canucks", "vegas-golden-knights"
 ]
 
+TEAM_COLORS = {
+    "Anaheim Ducks": "#F47A38",
+    "Arizona Coyotes": "#751824",
+    "Atlanta Thrashers": "#77C8ED",
+    "Boston Bruins": "#FFB81C",
+    "Buffalo Sabres": "#F1C80D",
+    "Calgary Flames": "#E8210B",
+    "Carolina Hurricanes": "#CC0000",
+    "Chicago Blackhawks": "#D30404",
+    "Colorado Avalanche": "#5A172C",
+    "Columbus Blue Jackets": "#002654",
+    "Dallas Stars": "#16A32B",
+    "Detroit Red Wings": "#CE1126",
+    "Edmonton Oilers": "#BB4817",
+    "Florida Panthers": "#DF1414",
+    "Los Angeles Kings": "#969696",
+    "Minnesota Wild": "#13573D",
+    "Montréal Canadiens": "#AF1E2D",
+    "Nashville Predators": "#FFB81C",
+    "New Jersey Devils": "#CE1126",
+    "New York Islanders": "#F29514",
+    "New York Rangers": "#0A6AC9",
+    "Ottawa Senators": "#C8102E",
+    "Philadelphia Flyers": "#F74902",
+    "Pittsburgh Penguins": "#FCB514",
+    "San Jose Sharks": "#218F97",
+    "Seattle Kraken": "#29CBB2",
+    "St. Louis Blues": "#002F87",
+    "Tampa Bay Lightning": "#033990",
+    "Toronto Maple Leafs": "#00205B",
+    "Utah Mammoth": "#70D1FE",
+    "Vancouver Canucks": "#02801B",
+    "Vegas Golden Knights": "#D7A22F",
+    "Washington Capitals": "#BE0D0D",
+    "Winnipeg Jets": "#002963",
+}
+
 
 def load_historical_stats(position):
 
@@ -50,6 +87,7 @@ def load_historical_stats(position):
     # Clean columns
     df = df.drop(columns=["Unnamed: 0"])
     df["playerName"] = df["firstName"] + " " + df["lastName"]
+    df["teamName"] = df["teamName"].str.replace("Utah Hockey Club", "Utah Mammoth", regex=False)
 
     # Encode avgToi to float
     def encode_avgtoi(avgtoi):
@@ -79,6 +117,8 @@ def load_historical_stats(position):
     df["yoe"] = df.groupby("playerId").cumcount() + 1
     df["playerId"] = df["playerId"].astype(str)
     df["season"] = df["season"].astype(str)
+    df["final_team"] = df["team"].apply(lambda x: x[-1] if isinstance(x, list) and x else None)
+    df["color"] = df["final_team"].map(TEAM_COLORS)
 
     # Clean season column
     season_lengths = {
@@ -90,12 +130,6 @@ def load_historical_stats(position):
     df["seasonLength"] = df["season"].map(season_lengths).fillna(82)
     df["gpa"] = df["gamesPlayed"] / df["seasonLength"]
     df = df[df["seasonLength"] > 0]
-
-    # # Normalize stats by games played
-    # df["gpg"] = df["goals"] / df["gamesPlayed"]
-    # df["apg"] = df["assists"] / df["gamesPlayed"]
-    # df["spg"] = df["shots"] / df["gamesPlayed"]
-    # df["ppppg"] = df["powerPlayPoints"] / df["gamesPlayed"]
 
     df["g/60"] = (df["goals"] / df["totalToi"]) * 60
     df["a/60"] = (df["assists"] / df["totalToi"]) * 60
