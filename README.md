@@ -13,7 +13,7 @@ This project has several goals at the moment:
 
 ### NHL Breakout Candidates Lineup
 
-Added my predictions for forwards, will add my predictions for defensemen and goalies in a bit.
+Added my predictions for forwards and defensemen, will add my predictions for goalies in a bit.
 
 ### Forwards
 
@@ -25,11 +25,11 @@ Added my predictions for forwards, will add my predictions for defensemen and go
 | Emil Heineman  | Marc Gatcomb    | Maxim Tsyplakov   |
 
 
-| LD               | RD               | 
-|------------------|------------------|
-| Player M - LD    | Player O - RD    |
-| Player N - LD    | Player P - RD    |
-| Player Q - LD    | Player R - RD    |
+| LD               | RD                  | 
+|------------------|---------------------|
+| Seamus Casey    | Uvis Balinskis       |
+| Mason Lohrei    | Scott Morrow         |
+| Olen Zellweger  | Shakir Mukhamadullin |
 
 
 | Goalie           |
