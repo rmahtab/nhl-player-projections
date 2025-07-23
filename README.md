@@ -25,11 +25,11 @@ Added my predictions for forwards and defensemen, will add my predictions for go
 | Emil Heineman  | Marc Gatcomb    | Maxim Tsyplakov   |
 
 
-| LD               | RD                  | 
-|------------------|---------------------|
-| Seamus Casey    | Uvis Balinskis       |
-| Mason Lohrei    | Scott Morrow         |
-| Olen Zellweger  | Shakir Mukhamadullin |
+| LD                     | RD                  | 
+|------------------------|---------------------|
+| Olen Zellweger         | Seamus Casey        |
+| Mason Lohrei           | Scott Morrow        |
+| Shakir Mukhamadullin   | Uvis Balinskis      |
 
 
 | Goalie           |
