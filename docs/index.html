@@ -292,10 +292,6 @@
         </div>
 
         <div class="search-section">
-            <div class="setup-notice">
-                🚀 Ready for testing! Replace API_BASE with your API Gateway URL below.
-            </div>
-            
             <div class="search-container">
                 <input type="text" class="search-input" placeholder="Enter NHL player name (e.g., Connor McDavid)" autocomplete="off">
                 <div class="autocomplete-dropdown"></div>
@@ -304,7 +300,8 @@
                 <button class="search-button">Find Similar Players</button>
             </div>
             <div class="rate-limit-warning">
-                Rate limited to 50 searches per hour to ensure fair usage and cost control.
+                Rate limited to 50 searches per hour to ensure fair usage and cost control.<br>
+                Note: Player must have at least 2 NHL seasons played for similarity analysis.
             </div>
             <div class="error-message"></div>
             
