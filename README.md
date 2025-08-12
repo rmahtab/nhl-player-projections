@@ -11,7 +11,7 @@ This project has several goals at the moment:
 
 ## Career Projection App
 
-Check out the [player similarity tool](https://rmahtab.github.io/nhl-player-projections/){:target="_blank"} I built!
+Check out the new [player similarity tool](https://rmahtab.github.io/nhl-player-projections/) I built!
 
 
 ## Breakout Candidates
