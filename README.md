@@ -9,6 +9,11 @@ This project has several goals at the moment:
 - Analyze team makeup of past Stanley Cup winners
 
 
+## Career Projection App
+
+Check out the [player similarity tool](https://rmahtab.github.io/nhl-player-projections/) I built!
+
+
 ## Breakout Candidates
 
 ### NHL Breakout Candidates Lineup
@@ -42,7 +47,4 @@ Added my predictions for forwards and defensemen, will add my predictions for go
 
 Will write my results here in a bit.
 
-## Career Projection
-
-Will write my results here in a bit.
 
