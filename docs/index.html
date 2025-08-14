@@ -158,7 +158,7 @@
         }
 
         .results-title {
-            font-size: 1.8rem;
+            font-size: 1.5rem;
             font-weight: 600;
             margin-bottom: 2rem;
             text-align: center;
@@ -276,11 +276,34 @@
             50% { opacity: 0.5; }
         }
 
+        .charts-section {
+            display: none;
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .chart-container {
+            background: rgba(45, 55, 72, 0.6);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 1rem;
+            border: 1px solid rgba(79, 209, 199, 0.2);
+            height: 450px;
+            width: 100%;
+            max-width: 100%;
+            overflow: hidden;
+        }
+
         @media (max-width: 768px) {
             .container { padding: 1rem; }
             .title { font-size: 2rem; }
             .search-section { padding: 1.5rem; }
-            .player-cards { grid-template-columns: 1fr; }
+            .charts-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -288,12 +311,12 @@
     <div class="container">
         <div class="header">
             <h1 class="title">NHL Player Similarity</h1>
-            <p class="subtitle">Discover players with similar performance profiles using advanced analytics</p>
+            <p class="subtitle">Predict career trajectories of emerging NHL talent using statistical comparisons to established players</p>
         </div>
 
         <div class="search-section">
             <div class="search-container">
-                <input type="text" class="search-input" placeholder="Enter NHL player name (e.g., Connor McDavid)" autocomplete="off">
+                <input type="text" class="search-input" placeholder="Enter NHL player name (e.g., Will Cuylle)" autocomplete="off">
                 <div class="autocomplete-dropdown"></div>
             </div>
             <div style="text-align: center;">
@@ -314,11 +337,24 @@
         <div class="results-section">
             <h2 class="results-title">Most Similar Players</h2>
             <div class="player-cards"></div>
+            
+            <div class="charts-section" style="margin-top: 3rem;">
+                <h3 style="text-align: center; color: #4fd1c7; margin-bottom: 1rem; font-size: 1.5rem;">Performance Comparison</h3>
+                <p style="text-align: center; color: #a0aec0; margin-bottom: 2rem; font-size: 0.9rem;">
+                    Vertical lines indicate the lookback window used for similarity analysis
+                </p>
+                <div class="charts-grid">
+                    <div id="chart1" class="chart-container"></div>
+                    <div id="chart2" class="chart-container"></div>
+                    <div id="chart3" class="chart-container"></div>
+                    <div id="chart4" class="chart-container"></div>
+                </div>
+            </div>
         </div>
     </div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.26.0/plotly.min.js"></script>
     <script>
-        // 🔧 REPLACE THIS WITH YOUR API GATEWAY URL
         const API_BASE = 'https://7h5hll5x0c.execute-api.us-east-1.amazonaws.com/prod/api';
 
         // Security and rate limiting - FIXED to use sessionStorage for Squarespace compatibility
@@ -532,7 +568,7 @@
                 const response = await findSimilarPlayers(playerName);
                 
                 if (response.success && response.similar_players) {
-                    displayResults(response.search_player, response.similar_players);
+                    displayResults(response.search_player, response.similar_players, response.plot_data);
                 } else {
                     showError(response.error || 'Player not found in database');
                 }
@@ -561,9 +597,19 @@
         });
 
         // Display results
-        function displayResults(searchPlayer, similarPlayers) {
+        function displayResults(searchPlayer, similarPlayers, plotData = null) {
             const resultsTitle = document.querySelector('.results-title');
-            resultsTitle.textContent = `Players Similar to ${searchPlayer}`;
+            
+            // Create dynamic title with explanation
+            let titleText = `Players similar to ${searchPlayer}`;
+            if (plotData && plotData.time_vals && plotData.time_vals.length >= 2) {
+                const startYear = plotData.time_vals[0];
+                const endYear = plotData.time_vals[plotData.time_vals.length - 1];
+                const firstName = searchPlayer.split(' ')[0];
+                titleText = `Players similar to ${searchPlayer} based on scoring statistics during years ${startYear}-${endYear} of their careers, since ${firstName} has played ${endYear} seasons and the algorithm uses a lookback window of 2 seasons`;
+            }
+            
+            resultsTitle.textContent = titleText;
             
             playerCards.innerHTML = similarPlayers.map((player, index) => `
                 <div class="player-card" style="animation-delay: ${index * 0.1}s">
@@ -577,7 +623,120 @@
             `).join('');
             
             resultsSection.style.display = 'block';
+            
+            // Display charts if plot data is available
+            if (plotData && plotData.df && plotData.df.length > 0) {
+                displayCharts(plotData);
+                document.querySelector('.charts-section').style.display = 'block';
+            }
+            
             resultsSection.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Display Plotly charts
+        function displayCharts(plotData) {
+            const { df, time_vals, time_col } = plotData;
+            const stats = ['g/60', 'a/60', 's/60', 'ppp/60'];
+            
+            stats.forEach((stat, index) => {
+                createLineChart(`chart${index + 1}`, df, time_col, stat, time_vals);
+            });
+        }
+
+        // Create individual line chart
+        function createLineChart(containerId, df, timeCol, stat, timeVals) {
+            // Map abbreviated stats to full names
+            const statNames = {
+                'g/60': 'Goals/60',
+                'a/60': 'Assists/60', 
+                's/60': 'Shots/60',
+                'ppp/60': 'Power Play Points/60'
+            };
+            
+            const fullStatName = statNames[stat] || stat.toUpperCase();
+            
+            // Group data by player
+            const playerData = {};
+            df.forEach(row => {
+                if (!playerData[row.playerName]) {
+                    playerData[row.playerName] = { x: [], y: [] };
+                }
+                playerData[row.playerName].x.push(row[timeCol]);
+                playerData[row.playerName].y.push(row[stat]);
+            });
+
+            // Create traces for each player
+            const traces = Object.keys(playerData).map(playerName => ({
+                x: playerData[playerName].x,
+                y: playerData[playerName].y,
+                mode: 'lines+markers',
+                name: playerName,
+                type: 'scatter'
+            }));
+
+            // Add vertical lines for time values
+            const shapes = timeVals.map(timeVal => ({
+                type: 'line',
+                x0: timeVal,
+                x1: timeVal,
+                y0: 0,
+                y1: 1,
+                yref: 'paper',
+                line: {
+                    color: 'gray',
+                    dash: 'dot',
+                    width: 1
+                }
+            }));
+
+            const layout = {
+                title: {
+                    text: `${fullStatName} Over Time`,
+                    font: { color: '#e2e8f0' }
+                },
+                xaxis: {
+                    title: 'Year of Experience',
+                    color: '#a0aec0',
+                    gridcolor: 'rgba(160, 174, 192, 0.2)'
+                },
+                yaxis: {
+                    title: fullStatName,
+                    color: '#a0aec0',
+                    gridcolor: 'rgba(160, 174, 192, 0.2)'
+                },
+                paper_bgcolor: 'rgba(0,0,0,0)',
+                plot_bgcolor: 'rgba(0,0,0,0)',
+                font: { color: '#e2e8f0' },
+                shapes: shapes,
+                legend: {
+                    font: { color: '#e2e8f0' }
+                },
+                autosize: true,
+                height: 400,
+                margin: { t: 60, r: 50, b: 100, l: 60 }
+            };
+
+            const config = {
+                responsive: true,
+                displayModeBar: false,
+                useResizeHandler: true,
+                style: { width: "100%", height: "100%" }
+            };
+
+            // Add a small delay to ensure container is properly sized before plotting
+            setTimeout(() => {
+                Plotly.newPlot(containerId, traces, layout, config);
+                
+                // Force initial resize after plot is created
+                setTimeout(() => {
+                    Plotly.Plots.resize(containerId);
+                }, 100);
+            }, 50);
+            
+            // Add resize listener to properly handle window resizing
+            window.addEventListener('resize', () => {
+                Plotly.Plots.resize(containerId);
+            });
         }
 
         // Error handling
