@@ -349,6 +349,15 @@
                     <div id="chart3" class="chart-container"></div>
                     <div id="chart4" class="chart-container"></div>
                 </div>
+                <div class="profile-section" style="margin-top: 3rem;">
+                    <h3 style="text-align: center; color: #4fd1c7; margin-bottom: 1rem; font-size: 1.5rem;">Player Profile Comparison</h3>
+                    <p style="text-align: center; color: #a0aec0; margin-bottom: 2rem; font-size: 0.9rem;">
+                        Physical attribute comparison between similar players and league average
+                    </p>
+                    <div class="profile-charts-grid" style="display: grid; grid-template-columns: 1fr; gap: 2rem; margin-bottom: 2rem;">
+                        <div id="chart5" class="chart-container"></div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -641,6 +650,8 @@
             stats.forEach((stat, index) => {
                 createLineChart(`chart${index + 1}`, df, time_col, stat, time_vals);
             });
+
+            createScatterChart('chart5', plotData);
         }
 
         // Create individual line chart
@@ -704,16 +715,22 @@
                     color: '#a0aec0',
                     gridcolor: 'rgba(160, 174, 192, 0.2)'
                 },
+                dragmode: 'pan',
                 paper_bgcolor: 'rgba(0,0,0,0)',
                 plot_bgcolor: 'rgba(0,0,0,0)',
                 font: { color: '#e2e8f0' },
                 shapes: shapes,
                 legend: {
-                    font: { color: '#e2e8f0' }
+                    font: { color: '#e2e8f0' },
+                    orientation: 'h',  // Horizontal orientation
+                    x: 0.5,           // Center horizontally (0.5 = middle)
+                    xanchor: 'center', // Anchor point for x positioning
+                    y: -0.3,          // Position below the plot area (negative value)
+                    yanchor: 'top'    // Anchor point for y positioning
                 },
                 autosize: true,
                 height: 400,
-                margin: { t: 60, r: 50, b: 100, l: 60 }
+                margin: { t: 60, r: 50, b: 140, l: 60 }
             };
 
             const config = {
@@ -734,6 +751,89 @@
             }, 50);
             
             // Add resize listener to properly handle window resizing
+            window.addEventListener('resize', () => {
+                Plotly.Plots.resize(containerId);
+            });
+        }
+
+        function createScatterChart(containerId, plotData) {
+            const { df, avg_weight, avg_height } = plotData;
+            
+            // Create scatter plot data for similar players
+            const playerTrace = {
+                x: df.map(row => row.weightInPounds),
+                y: df.map(row => row.heightInInches), 
+                mode: 'markers',
+                type: 'scatter',
+                name: 'Similar Players',
+                marker: {
+                    color: '#4fd1c7',
+                    size: 8
+                },
+                text: df.map(row => row.playerName),
+                textposition: 'top center'
+            };
+            
+            // Create average point
+            const avgTrace = {
+                x: [avg_weight],
+                y: [avg_height],
+                mode: 'markers',
+                type: 'scatter',
+                name: 'League Average',
+                marker: {
+                    color: 'yellow',
+                    size: 12,
+                    symbol: 'star'
+                }
+            };
+            
+            const layout = {
+                title: {
+                    text: 'Weight vs Height Comparison',
+                    font: { color: '#e2e8f0' }
+                },
+                dragmode: 'pan',
+                xaxis: {
+                    title: 'Weight',
+                    color: '#a0aec0',
+                    gridcolor: 'rgba(160, 174, 192, 0.2)'
+                },
+                yaxis: {
+                    title: 'Height', 
+                    color: '#a0aec0',
+                    gridcolor: 'rgba(160, 174, 192, 0.2)'
+                },
+                paper_bgcolor: 'rgba(0,0,0,0)',
+                plot_bgcolor: 'rgba(0,0,0,0)',
+                font: { color: '#e2e8f0' },
+                legend: {
+                    font: { color: '#e2e8f0' },
+                    orientation: 'h',
+                    x: 0.5,
+                    xanchor: 'center',
+                    y: -0.3,
+                    yanchor: 'top'
+                },
+                autosize: true,
+                height: 400,
+                margin: { t: 60, r: 50, b: 140, l: 60 }
+            };
+            
+            const config = {
+                responsive: true,
+                displayModeBar: false,
+                useResizeHandler: true,
+                style: { width: "100%", height: "100%" }
+            };
+            
+            setTimeout(() => {
+                Plotly.newPlot(containerId, [playerTrace, avgTrace], layout, config);
+                setTimeout(() => {
+                    Plotly.Plots.resize(containerId);
+                }, 100);
+            }, 50);
+            
             window.addEventListener('resize', () => {
                 Plotly.Plots.resize(containerId);
             });
