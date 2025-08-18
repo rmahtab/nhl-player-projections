@@ -644,8 +644,20 @@
 
         // Display Plotly charts
         function displayCharts(plotData) {
-            const { df, time_vals, time_col } = plotData;
-            const stats = ['g/60', 'a/60', 's/60', 'ppp/60'];
+            const { df, position, time_vals, time_col } = plotData;
+            
+            // Conditional stats based on position
+            const stats = position === 'goalies' ? ['gaa', 'sv%'] : ['g/60', 'a/60', 's/60', 'ppp/60'];
+
+            // Show/hide chart containers based on number of stats
+            for (let i = 1; i <= 4; i++) {
+                const chartContainer = document.getElementById(`chart${i}`);
+                if (i <= stats.length) {
+                    chartContainer.style.display = 'block';  // Show needed charts
+                } else {
+                    chartContainer.style.display = 'none';   // Hide unused charts
+                }
+            }
             
             stats.forEach((stat, index) => {
                 createLineChart(`chart${index + 1}`, df, time_col, stat, time_vals);
@@ -661,7 +673,9 @@
                 'g/60': 'Goals/60',
                 'a/60': 'Assists/60', 
                 's/60': 'Shots/60',
-                'ppp/60': 'Power Play Points/60'
+                'ppp/60': 'Power Play Points/60',
+                'gaa': 'Goals Against Average',
+                'sv%': 'Save Percentage'
             };
             
             const fullStatName = statNames[stat] || stat.toUpperCase();
